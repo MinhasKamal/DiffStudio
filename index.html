@@ -24,11 +24,11 @@
         --gap-bg: rgba(60, 60, 60, 0.2);
         
         /* Intra-line Substring Highlights (Deeper Colors) */
-        --char-removed-bg: rgba(255, 50, 50, 0.65);
-        --char-added-bg: rgba(50, 255, 50, 0.55);
+        --char-removed-bg: rgba(255, 50, 50, 0.25);
+        --char-added-bg: rgba(50, 255, 50, 0.25);
 
-        --btn-bg: #3B3B3B;
-        --btn-hover: #4A4A4A;
+        --btn-bg: #5F9FBF;
+        --btn-hover: #3F7FAF;
         --stat-add: #4CAF50;
         --stat-rem: #F44336;
     }
@@ -49,8 +49,8 @@
         --char-removed-bg: rgba(220, 0, 0, 0.35);
         --char-added-bg: rgba(0, 200, 0, 0.35);
 
-        --btn-bg: #3B3B3B;
-        --btn-hover: #4A4A4A;
+        --btn-bg: #5F9FBF;
+        --btn-hover: #6FAFDF;
         --stat-add: #2e7d32;
         --stat-rem: #c62828;
     }
@@ -80,8 +80,10 @@
     .header-controls { display: flex; gap: 10px; align-items: center; }
 
     button {
+		font-family: "Segoe UI Symbol", "Segoe UI", sans-serif;
+		font-size: 1.5rem; font-weight: bold;
         background-color: var(--btn-bg); color: white;
-        border: none; padding: 8px 16px; border-radius: 4px;
+        border: none; padding: 0px 16px; border-radius: 4px;
         cursor: pointer; font-weight: bold; transition: background 0.2s;
     }
     button:hover { background-color: var(--btn-hover); }
@@ -153,7 +155,7 @@
     body.synced-mode #toggle-hide-unchanged { display: inline-block; }
     body.synced-mode.hide-unchanged .mark.unchanged,
     body.synced-mode.hide-unchanged .ln-mark.unchanged { display: none !important; }
-
+	
     /* --- Visual Separator --- */
     .diff-separator {
         display: none; height: 20px; line-height: 18px;
@@ -181,9 +183,9 @@
     </div>
     <div class="header-controls">
         <span class="mode-indicator">Read-Only</span>
-        <button id="toggle-hide-unchanged" title="Hide Unchanged Lines">Hide Unchanged</button>
-        <button id="toggle-mode" title="Toggle Synced Scrolling">Unsynced</button>
-        <button id="toggle-theme" title="Toggle Theme">🌙</button>
+        <button id="toggle-hide-unchanged" title="Toggle Hide Unchanged Lines">≈</button>
+        <button id="toggle-mode" title="Toggle Synced Scrolling">↭</button>
+        <button id="toggle-theme" title="Toggle Theme">☽</button>
     </div>
 </header>
 
@@ -240,7 +242,7 @@
     toggleThemeBtn.addEventListener('click', () => {
         isLightTheme = !isLightTheme;
         document.body.classList.toggle('light-theme', isLightTheme);
-        toggleThemeBtn.textContent = isLightTheme ? '☀️' : '🌙';
+        toggleThemeBtn.textContent = isLightTheme ? '☼' : '☽';
         hljsTheme.href = isLightTheme 
             ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs.min.css' 
             : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs2015.min.css';
@@ -254,7 +256,7 @@
 
         isSyncedMode = !isSyncedMode;
         document.body.classList.toggle('synced-mode', isSyncedMode);
-        toggleModeBtn.textContent = isSyncedMode ? 'Synced' : 'Unsynced';
+        toggleModeBtn.textContent = isSyncedMode ? '↔' : '↭';
         
         if (isSyncedMode) {
             highlightsLeft.scrollTop = currentLeftScroll;
@@ -269,7 +271,7 @@
     toggleHideUnchangedBtn.addEventListener('click', () => {
         isHideUnchanged = !isHideUnchanged;
         document.body.classList.toggle('hide-unchanged', isHideUnchanged);
-        toggleHideUnchangedBtn.textContent = isHideUnchanged ? 'Show Unchanged' : 'Hide Unchanged';
+        toggleHideUnchangedBtn.textContent = isHideUnchanged ? '≠' : '≈';
     });
 
     // --- Scroll Syncing Logic ---
