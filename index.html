@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CodeDiff</title>
+<title>DiffStudio</title>
 
 <!-- Highlight.js Themes & Library -->
 <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs2015.min.css">
@@ -18,9 +18,15 @@
         --border-color: #444;
         --ln-bg: #252526;
         --ln-color: #858585;
-        --removed-bg: rgba(255, 0, 0, 0.3);
-        --added-bg: rgba(0, 255, 0, 0.25);
+        
+        --removed-bg: rgba(255, 0, 0, 0.25);
+        --added-bg: rgba(0, 255, 0, 0.2);
         --gap-bg: rgba(60, 60, 60, 0.2);
+        
+        /* Intra-line Substring Highlights (Deeper Colors) */
+        --char-removed-bg: rgba(255, 50, 50, 0.65);
+        --char-added-bg: rgba(50, 255, 50, 0.55);
+
         --btn-bg: #3B3B3B;
         --btn-hover: #4A4A4A;
         --stat-add: #4CAF50;
@@ -34,9 +40,15 @@
         --border-color: #ccc;
         --ln-bg: #f9f9f9;
         --ln-color: #999;
-        --removed-bg: rgba(255, 0, 0, 0.15);
-        --added-bg: rgba(0, 255, 0, 0.15);
+        
+        --removed-bg: rgba(255, 0, 0, 0.12);
+        --added-bg: rgba(0, 255, 0, 0.12);
         --gap-bg: rgba(0, 0, 0, 0.05);
+
+        /* Intra-line Substring Highlights (Deeper Colors) */
+        --char-removed-bg: rgba(220, 0, 0, 0.35);
+        --char-added-bg: rgba(0, 200, 0, 0.35);
+
         --btn-bg: #3B3B3B;
         --btn-hover: #4A4A4A;
         --stat-add: #2e7d32;
@@ -45,182 +57,115 @@
 
     * { box-sizing: border-box; }
     body {
-        margin: 0;
-        padding: 0;
+        margin: 0; padding: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
+        background-color: var(--bg-color); color: var(--text-color);
+        display: flex; flex-direction: column; height: 100vh;
         transition: background-color 0.3s, color 0.3s;
     }
     
     header {
-        padding: 5px 10px;
-        background-color: var(--header-bg);
+        padding: 5px 10px; background-color: var(--header-bg);
         border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: flex; justify-content: space-between; align-items: center;
         transition: background-color 0.3s, border-color 0.3s;
     }
     
-    .title-area {
-        display: flex;
-        align-items: baseline;
-        gap: 20px;
-    }
+    .title-area { display: flex; align-items: baseline; gap: 20px; }
     .title { font-size: 1.15rem; font-weight: bold; color: #5F9FBF; }
     .stats { font-size: 0.95rem; font-weight: 600; }
     .stat-add { color: var(--stat-add); margin-right: 10px; }
     .stat-rem { color: var(--stat-rem); }
     
-    .header-controls {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
+    .header-controls { display: flex; gap: 10px; align-items: center; }
 
     button {
-        background-color: var(--btn-bg);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background 0.2s;
+        background-color: var(--btn-bg); color: white;
+        border: none; padding: 8px 16px; border-radius: 4px;
+        cursor: pointer; font-weight: bold; transition: background 0.2s;
     }
     button:hover { background-color: var(--btn-hover); }
     
-    .container {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-    }
+    .container { display: flex; flex: 1; overflow: hidden; }
     .panel {
-        width: 50%;
-        display: flex;
-        flex-direction: row;
+        width: 50%; display: flex; flex-direction: row;
         border-right: 1px solid var(--border-color);
-        position: relative;
-        overflow: hidden;
+        position: relative; overflow: hidden;
     }
     .panel:last-child { border-right: none; }
     
     .line-numbers {
-        width: 45px;
-        min-width: 45px;
-        background-color: var(--ln-bg);
-        color: var(--ln-color);
-        text-align: right;
-        padding: 10px 10px 10px 0;
+        width: 45px; min-width: 45px;
+        background-color: var(--ln-bg); color: var(--ln-color);
+        text-align: right; padding: 10px 10px 10px 0;
         font-family: 'Courier New', Courier, monospace;
-        font-size: 14px;
-        line-height: 20px;
-        overflow: hidden;
-        user-select: none;
+        font-size: 14px; line-height: 20px;
+        overflow: hidden; user-select: none;
         border-right: 1px solid var(--border-color);
         transition: background-color 0.3s, color 0.3s;
     }
     
     .editor-wrapper {
-        position: relative;
-        flex: 1;
-        overflow: hidden;
+        position: relative; flex: 1; overflow: hidden;
         background-color: var(--bg-color);
     }
     
     .highlights, textarea {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        padding: 10px;
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%; padding: 10px;
         font-family: 'Courier New', Courier, monospace;
-        font-size: 14px;
-        line-height: 20px;
-        white-space: pre;
-        overflow: auto;
-        border: none;
-        outline: none;
-        margin: 0;
-		overscroll-behavior: none;
+        font-size: 14px; line-height: 20px;
+        white-space: pre; overflow: auto;
+        border: none; outline: none; margin: 0;
+        overscroll-behavior: none;
     }
     
-    .highlights.hljs {
-        z-index: 1;
-        pointer-events: none; 
-        background: transparent !important; 
-    }
+    .highlights.hljs { z-index: 1; pointer-events: none; background: transparent !important; }
     
     textarea {
-        z-index: 2;
-        background: transparent !important;
-        color: transparent !important; 
-        caret-color: var(--text-color);
+        z-index: 2; background: transparent !important;
+        color: transparent !important; caret-color: var(--text-color);
         resize: none;
     }
 
-    /* Diff structural classes */
+    /* Diff Line classes */
     .removed { background-color: var(--removed-bg); }
     .added { background-color: var(--added-bg); }
     .gap { background-color: var(--gap-bg); }
     
-    /* 
-      By setting width: 100% and pairing it with the dynamic inner wrapper in the JS, 
-      the backgrounds will stretch to cover the entire scrollable area. 
-    */
+    /* Intra-line Substring classes */
+    .char-removed { background-color: var(--char-removed-bg); border-radius: 2px; }
+    .char-added { background-color: var(--char-added-bg); border-radius: 2px; }
+
     .mark { display: block; width: 100%; height: 20px; line-height: 20px; }
     .ln-mark { display: block; height: 20px; line-height: 20px; }
 
     /* =========================================
        SYNCED MODE OVERRIDES 
        ========================================= */
-    body.synced-mode .container {
-        overflow-y: auto;
-        overflow-x: hidden;
-        align-items: flex-start;
-    }
-    body.synced-mode .panel {
-        height: auto;
-        min-height: 100%;
-        overflow: hidden;
-    }
-    body.synced-mode .editor-wrapper {
-        position: relative;
-        height: auto;
-        overflow-x: auto; 
-        overflow-y: hidden;
-    }
-    body.synced-mode .highlights.hljs {
-        position: relative; 
-        height: auto;
-        overflow: visible;
-        pointer-events: auto; 
-    }
-    body.synced-mode .line-numbers {
-        position: relative;
-        height: auto;
-        overflow: visible;
-    }
-    body.synced-mode textarea {
-        display: none; 
-    }
-    .mode-indicator {
-        display: none;
-        font-size: 0.9rem;
-        color: #ff9900;
-        margin-right: 15px;
-        font-weight: bold;
-    }
+    body.synced-mode textarea { display: none; }
+    body.synced-mode .highlights.hljs { pointer-events: auto; }
+    
+    .mode-indicator { display: none; font-size: 0.9rem; color: #ff9900; margin-right: 15px; font-weight: bold; }
     body.synced-mode .mode-indicator { display: inline; }
-    textarea::placeholder {
-        color: #888 !important; /* Forces the placeholder to be visible */
-        font-style: italic;
-	}
+
+    #toggle-hide-unchanged { display: none; }
+    body.synced-mode #toggle-hide-unchanged { display: inline-block; }
+    body.synced-mode.hide-unchanged .mark.unchanged,
+    body.synced-mode.hide-unchanged .ln-mark.unchanged { display: none !important; }
+
+    /* --- Visual Separator --- */
+    .diff-separator {
+        display: none; height: 20px; line-height: 18px;
+        background-color: rgba(128, 128, 228, 0.5);
+        border-top: 1px dashed rgba(128, 128, 228, 0.7);
+        border-bottom: 1px dashed rgba(128, 128, 228, 0.7);
+        width: 100%;
+    }
+    .ln-mark.diff-separator { color: #888; text-align: center; font-weight: bold; }
+    body.synced-mode.hide-unchanged .diff-separator { display: block !important; }
+
+    textarea::placeholder { color: #888 !important; font-style: italic; }
     a { color: inherit; text-decoration: inherit; }
 </style>
 </head>
@@ -228,7 +173,7 @@
 
 <header>
     <div class="title-area">
-        <div class="title" title="by Minhas Kamal"><a href="https://github.com/MinhasKamal/CodeDiff" target="_blank">CodeDiff:</a></div>
+        <div class="title" title="by Minhas Kamal"><a href="https://github.com/MinhasKamal/DiffStudio" target="_blank">DiffStudio:</a></div>
         <div class="stats" id="diff-stats">
             <span class="stat-add">+0 Additions</span>
             <span class="stat-rem">-0 Deletions</span>
@@ -236,6 +181,7 @@
     </div>
     <div class="header-controls">
         <span class="mode-indicator">Read-Only</span>
+        <button id="toggle-hide-unchanged" title="Hide Unchanged Lines">Hide Unchanged</button>
         <button id="toggle-mode" title="Toggle Synced Scrolling">Unsynced</button>
         <button id="toggle-theme" title="Toggle Theme">🌙</button>
     </div>
@@ -269,10 +215,12 @@
     
     const toggleModeBtn = document.getElementById('toggle-mode');
     const toggleThemeBtn = document.getElementById('toggle-theme');
+    const toggleHideUnchangedBtn = document.getElementById('toggle-hide-unchanged');
     const hljsTheme = document.getElementById('hljs-theme');
 
     let isSyncedMode = false;
     let isLightTheme = false;
+    let isHideUnchanged = false;
 
     // --- Tab Support Logic ---
     function handleTab(e) {
@@ -300,96 +248,180 @@
 
     // --- Mode Toggle Logic ---
     toggleModeBtn.addEventListener('click', () => {
+        // Save current scroll to transfer it seamlessly
+        const currentLeftScroll = isSyncedMode ? highlightsLeft.scrollTop : inputLeft.scrollTop;
+        const currentRightScroll = isSyncedMode ? highlightsRight.scrollTop : inputRight.scrollTop;
+
         isSyncedMode = !isSyncedMode;
         document.body.classList.toggle('synced-mode', isSyncedMode);
         toggleModeBtn.textContent = isSyncedMode ? 'Synced' : 'Unsynced';
+        
+        if (isSyncedMode) {
+            highlightsLeft.scrollTop = currentLeftScroll;
+        } else {
+            inputLeft.scrollTop = currentLeftScroll;
+            inputRight.scrollTop = currentRightScroll;
+        }
         processDiff(); 
     });
 
-    // --- Sync scrolling for Individual Mode ---
-    function syncScroll(source, target, lineNums) {
+    // --- Hide Unchanged Logic ---
+    toggleHideUnchangedBtn.addEventListener('click', () => {
+        isHideUnchanged = !isHideUnchanged;
+        document.body.classList.toggle('hide-unchanged', isHideUnchanged);
+        toggleHideUnchangedBtn.textContent = isHideUnchanged ? 'Show Unchanged' : 'Hide Unchanged';
+    });
+
+    // --- Scroll Syncing Logic ---
+    function syncUnsyncedScroll(source, target, lineNums) {
         if (isSyncedMode) return;
         target.scrollTop = source.scrollTop;
         target.scrollLeft = source.scrollLeft;
         lineNums.scrollTop = source.scrollTop;
     }
-    inputLeft.addEventListener('scroll', () => syncScroll(inputLeft, highlightsLeft, linesLeft));
-    inputRight.addEventListener('scroll', () => syncScroll(inputRight, highlightsRight, linesRight));
+    inputLeft.addEventListener('scroll', () => syncUnsyncedScroll(inputLeft, highlightsLeft, linesLeft));
+    inputRight.addEventListener('scroll', () => syncUnsyncedScroll(inputRight, highlightsRight, linesRight));
+
+    let isSyncingLeft = false;
+    let isSyncingRight = false;
+    
+    highlightsLeft.addEventListener('scroll', () => {
+        if (!isSyncedMode) return;
+        if (isSyncingLeft) { isSyncingLeft = false; return; }
+        isSyncingRight = true;
+        highlightsRight.scrollTop = highlightsLeft.scrollTop;
+        linesLeft.scrollTop = highlightsLeft.scrollTop;
+        linesRight.scrollTop = highlightsLeft.scrollTop;
+    });
+
+    highlightsRight.addEventListener('scroll', () => {
+        if (!isSyncedMode) return;
+        if (isSyncingRight) { isSyncingRight = false; return; }
+        isSyncingLeft = true;
+        highlightsLeft.scrollTop = highlightsRight.scrollTop;
+        linesLeft.scrollTop = highlightsRight.scrollTop;
+        linesRight.scrollTop = highlightsRight.scrollTop;
+    });
 
     function escapeHtml(text) {
         return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || ' ';
     }
 
+    // Swaps invisible markers for highly visible char-level spans
     function highlightLine(line, lang) {
-        if (!line) return ' '; 
-        if (!lang || lang === 'plaintext') return escapeHtml(line);
-        try {
-            return hljs.highlight(line, { language: lang, ignoreIllegals: true }).value || ' ';
-        } catch (e) {
-            return escapeHtml(line);
+        if (!line) return ' ';
+        let result = '';
+        if (!lang || lang === 'plaintext') {
+            result = escapeHtml(line);
+        } else {
+            try { result = hljs.highlight(line, { language: lang, ignoreIllegals: true }).value || ' '; } 
+            catch (e) { result = escapeHtml(line); }
         }
+        return result
+            .replace(/\uE000/g, '<span class="char-removed">')
+            .replace(/\uE001/g, '</span>')
+            .replace(/\uE002/g, '<span class="char-added">')
+            .replace(/\uE003/g, '</span>');
     }
 
-    function getLcsTable(oldLines, newLines) {
-        const dp = Array(oldLines.length + 1).fill(null).map(() => Array(newLines.length + 1).fill(0));
-        for (let i = 1; i <= oldLines.length; i++) {
-            for (let j = 1; j <= newLines.length; j++) {
-                if (oldLines[i - 1] === newLines[j - 1]) {
-                    dp[i][j] = dp[i - 1][j - 1] + 1;
-                } else {
-                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                }
+    // Prevents HTML span tags from breaking across newlines
+    function fixDanglingMarkers(lines, openMark, closeMark) {
+        let inMark = false;
+        return lines.map(line => {
+            let res = '';
+            if (inMark) res += openMark;
+            for (let i = 0; i < line.length; i++) {
+                let c = line[i];
+                if (c === openMark) inMark = true;
+                else if (c === closeMark) inMark = false;
+                res += c;
+            }
+            if (inMark) res += closeMark;
+            return res;
+        });
+    }
+
+    // --- Block-Level Semantic Token Diffing ---
+    function getTokenDiff(s1, s2) {
+        if (!s1 && !s2) return { marked1: '', marked2: '' };
+        if (!s1) return { marked1: '', marked2: '\uE002' + s2 + '\uE003' };
+        if (!s2) return { marked1: '\uE000' + s1 + '\uE001', marked2: '' };
+        
+        const regex = /\r\n|\n|[\w]+|[ \t]+|[^\w\s]/g;
+        const t1 = s1.match(regex) || [];
+        const t2 = s2.match(regex) || [];
+
+        if (t1.length * t2.length > 4000000) return { marked1: s1, marked2: s2 };
+
+        const dp = Array(t1.length + 1).fill(null).map(() => new Int32Array(t2.length + 1));
+        for (let i = 1; i <= t1.length; i++) {
+            for (let j = 1; j <= t2.length; j++) {
+                if (t1[i-1] === t2[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+                else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
             }
         }
-        return dp;
+
+        let i = t1.length, j = t2.length;
+        let res1 = [], res2 = [];
+        
+        while(i > 0 || j > 0) {
+            if (i > 0 && j > 0 && t1[i-1] === t2[j-1]) {
+                res1.unshift(t1[i-1]); res2.unshift(t2[j-1]);
+                i--; j--;
+            } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+                res2.unshift('\uE002' + t2[j-1] + '\uE003'); j--;
+            } else if (i > 0 && (j === 0 || dp[i][j-1] < dp[i-1][j])) {
+                res1.unshift('\uE000' + t1[i-1] + '\uE001'); i--;
+            }
+        }
+        
+        return { 
+            marked1: res1.join('').replace(/\uE001\uE000/g, ''), 
+            marked2: res2.join('').replace(/\uE003\uE002/g, '')
+        };
     }
 
-    function buildIndividualDiff(oldLines, newLines, dp) {
+    function getLcsBlocks(oldLines, newLines) {
+        const dp = Array(oldLines.length + 1).fill(null).map(() => new Int32Array(newLines.length + 1));
+        for (let i = 1; i <= oldLines.length; i++) {
+            for (let j = 1; j <= newLines.length; j++) {
+                if (oldLines[i - 1] === newLines[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+                else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+        
         let i = oldLines.length, j = newLines.length;
-        const diffOld = Array(oldLines.length).fill('removed');
-        const diffNew = Array(newLines.length).fill('added');
-
-        while (i > 0 && j > 0) {
+        const matches = [];
+        
+        while(i > 0 && j > 0) {
             if (oldLines[i - 1] === newLines[j - 1]) {
-                diffOld[i - 1] = 'unchanged';
-                diffNew[j - 1] = 'unchanged';
-                i--; j--;
+                matches.unshift([i - 1, j - 1]); i--; j--;
             } else if (dp[i - 1][j] > dp[i][j - 1]) { i--; } 
             else { j--; }
         }
-        return { diffOld, diffNew };
-    }
 
-    function buildAlignedDiff(oldLines, newLines, dp) {
-        let i = oldLines.length, j = newLines.length;
-        const alignedOld = [], alignedNew = [];
-        const typeOld = [], typeNew = [];
-        const numOld = [], numNew = [];
-        let currOld = oldLines.length, currNew = newLines.length;
-
-        while (i > 0 || j > 0) {
-            if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-                alignedOld.unshift(oldLines[i - 1]); alignedNew.unshift(newLines[j - 1]);
-                typeOld.unshift('unchanged'); typeNew.unshift('unchanged');
-                numOld.unshift(currOld--); numNew.unshift(currNew--);
-                i--; j--;
-            } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-                alignedOld.unshift(''); alignedNew.unshift(newLines[j - 1]);
-                typeOld.unshift('gap'); typeNew.unshift('added');
-                numOld.unshift(''); numNew.unshift(currNew--);
-                j--;
-            } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
-                alignedOld.unshift(oldLines[i - 1]); alignedNew.unshift('');
-                typeOld.unshift('removed'); typeNew.unshift('gap');
-                numOld.unshift(currOld--); numNew.unshift('');
-                i--;
+        const blocks = [];
+        let lastOld = 0, lastNew = 0;
+        for (const [matchOld, matchNew] of matches) {
+            if (matchOld > lastOld || matchNew > lastNew) {
+                blocks.push({ type: 'changed', oldLines: oldLines.slice(lastOld, matchOld), newLines: newLines.slice(lastNew, matchNew), oldStart: lastOld, newStart: lastNew });
             }
+            blocks.push({ type: 'unchanged', oldLines: [oldLines[matchOld]], newLines: [newLines[matchNew]], oldStart: matchOld, newStart: matchNew });
+            lastOld = matchOld + 1; lastNew = matchNew + 1;
         }
-        return { alignedOld, alignedNew, typeOld, typeNew, numOld, numNew };
+        if (lastOld < oldLines.length || lastNew < newLines.length) {
+            blocks.push({ type: 'changed', oldLines: oldLines.slice(lastOld), newLines: newLines.slice(lastNew), oldStart: lastOld, newStart: lastNew });
+        }
+        return blocks;
     }
 
-    // --- Core Diff Processor ---
     function processDiff() {
+        // Capture Scroll Positions to prevent UI jumping
+        const leftScrollY = isSyncedMode ? highlightsLeft.scrollTop : inputLeft.scrollTop;
+        const rightScrollY = isSyncedMode ? highlightsRight.scrollTop : inputRight.scrollTop;
+        const leftScrollX = isSyncedMode ? highlightsLeft.scrollLeft : inputLeft.scrollLeft;
+        const rightScrollX = isSyncedMode ? highlightsRight.scrollLeft : inputRight.scrollLeft;
+
         const leftText = inputLeft.value;
         const rightText = inputRight.value;
         
@@ -400,57 +432,92 @@
         const oldLines = leftText.split('\n');
         const newLines = rightText.split('\n');
         
-        const dp = getLcsTable(oldLines, newLines);
+        const blocks = getLcsBlocks(oldLines, newLines);
         let leftHTML = '', rightHTML = '', leftLinesHTML = '', rightLinesHTML = '';
         let additions = 0, deletions = 0;
 
-        if (isSyncedMode) {
-            const { alignedOld, alignedNew, typeOld, typeNew, numOld, numNew } = buildAlignedDiff(oldLines, newLines, dp);
-            
-            alignedOld.forEach((line, idx) => {
-                const highlighted = highlightLine(line, langLeft);
-                leftHTML += `<span class="mark ${typeOld[idx]}">${highlighted}</span>`;
-                leftLinesHTML += `<span class="ln-mark">${numOld[idx]}</span>`;
-                if (typeOld[idx] === 'removed') deletions++;
-            });
-            alignedNew.forEach((line, idx) => {
-                const highlighted = highlightLine(line, langRight);
-                rightHTML += `<span class="mark ${typeNew[idx]}">${highlighted}</span>`;
-                rightLinesHTML += `<span class="ln-mark">${numNew[idx]}</span>`;
-                if (typeNew[idx] === 'added') additions++;
-            });
-        } else {
-            const { diffOld, diffNew } = buildIndividualDiff(oldLines, newLines, dp);
-            
-            oldLines.forEach((line, idx) => {
-                const highlighted = highlightLine(line, langLeft);
-                leftHTML += `<span class="mark ${diffOld[idx]}">${highlighted}</span>`;
-                leftLinesHTML += `<span class="ln-mark">${idx + 1}</span>`;
-                if (diffOld[idx] === 'removed') deletions++;
-            });
-            newLines.forEach((line, idx) => {
-                const highlighted = highlightLine(line, langRight);
-                rightHTML += `<span class="mark ${diffNew[idx]}">${highlighted}</span>`;
-                rightLinesHTML += `<span class="ln-mark">${idx + 1}</span>`;
-                if (diffNew[idx] === 'added') additions++;
-            });
-        }
+        blocks.forEach((block, blockIdx) => {
+            if (block.type === 'unchanged') {
+                if (isSyncedMode && (blockIdx === 0 || blocks[blockIdx - 1].type !== 'unchanged')) {
+                    leftHTML += `<span class="mark diff-separator"></span>`; leftLinesHTML += `<span class="ln-mark diff-separator">⋮</span>`;
+                    rightHTML += `<span class="mark diff-separator"></span>`; rightLinesHTML += `<span class="ln-mark diff-separator">⋮</span>`;
+                }
 
-        // Inner wrapper to force `.mark` backgrounds to stretch the full horizontal scroll width
+                leftHTML += `<span class="mark unchanged">${highlightLine(block.oldLines[0], langLeft)}</span>`;
+                leftLinesHTML += `<span class="ln-mark unchanged">${block.oldStart + 1}</span>`;
+                rightHTML += `<span class="mark unchanged">${highlightLine(block.newLines[0], langRight)}</span>`;
+                rightLinesHTML += `<span class="ln-mark unchanged">${block.newStart + 1}</span>`;
+            } else {
+                const oLen = block.oldLines.length; const nLen = block.newLines.length;
+                deletions += oLen; additions += nLen;
+
+                const oldBlockStr = block.oldLines.join('\n');
+                const newBlockStr = block.newLines.join('\n');
+                const tokenDiff = getTokenDiff(oldBlockStr, newBlockStr);
+                
+                const markedOldLines = fixDanglingMarkers(tokenDiff.marked1.split('\n'), '\uE000', '\uE001');
+                const markedNewLines = fixDanglingMarkers(tokenDiff.marked2.split('\n'), '\uE002', '\uE003');
+
+                if (isSyncedMode) {
+                    const maxLen = Math.max(oLen, nLen);
+                    for (let k = 0; k < maxLen; k++) {
+                        const hasOld = k < oLen, hasNew = k < nLen;
+
+                        if (hasOld) {
+                            leftHTML += `<span class="mark removed">${highlightLine(markedOldLines[k], langLeft)}</span>`;
+                            leftLinesHTML += `<span class="ln-mark removed">${block.oldStart + k + 1}</span>`;
+                        } else {
+                            leftHTML += `<span class="mark gap"> </span>`; leftLinesHTML += `<span class="ln-mark gap"></span>`;
+                        }
+
+                        if (hasNew) {
+                            rightHTML += `<span class="mark added">${highlightLine(markedNewLines[k], langRight)}</span>`;
+                            rightLinesHTML += `<span class="ln-mark added">${block.newStart + k + 1}</span>`;
+                        } else {
+                            rightHTML += `<span class="mark gap"> </span>`; rightLinesHTML += `<span class="ln-mark gap"></span>`;
+                        }
+                    }
+                } else {
+                    for (let k = 0; k < oLen; k++) {
+                        leftHTML += `<span class="mark removed">${highlightLine(markedOldLines[k], langLeft)}</span>`;
+                        leftLinesHTML += `<span class="ln-mark removed">${block.oldStart + k + 1}</span>`;
+                    }
+                    for (let k = 0; k < nLen; k++) {
+                        rightHTML += `<span class="mark added">${highlightLine(markedNewLines[k], langRight)}</span>`;
+                        rightLinesHTML += `<span class="ln-mark added">${block.newStart + k + 1}</span>`;
+                    }
+                }
+            }
+        });
+
         highlightsLeft.innerHTML = `<div style="width: max-content; min-width: 100%;">${leftHTML}</div>`;
         highlightsRight.innerHTML = `<div style="width: max-content; min-width: 100%;">${rightHTML}</div>`;
         linesLeft.innerHTML = leftLinesHTML;
         linesRight.innerHTML = rightLinesHTML;
-        
         statsContainer.innerHTML = `<span class="stat-add">+${additions} Additions</span> <span class="stat-rem">-${deletions} Deletions</span>`;
+
+        // Restore Scroll Positions Seamlessly
+        if (isSyncedMode) {
+            highlightsLeft.scrollTop = leftScrollY;
+            highlightsRight.scrollTop = leftScrollY;
+            linesLeft.scrollTop = leftScrollY;
+            linesRight.scrollTop = leftScrollY;
+            highlightsLeft.scrollLeft = leftScrollX;
+            highlightsRight.scrollLeft = rightScrollX;
+        } else {
+            highlightsLeft.scrollTop = leftScrollY;
+            highlightsRight.scrollTop = rightScrollY;
+            linesLeft.scrollTop = leftScrollY;
+            linesRight.scrollTop = rightScrollY;
+            highlightsLeft.scrollLeft = leftScrollX;
+            highlightsRight.scrollLeft = rightScrollX;
+        }
     }
 
-    // Reverted back to instant processing (no debouncing delay)
     inputLeft.addEventListener('input', processDiff);
     inputRight.addEventListener('input', processDiff);
-    
-    // Initial render
     processDiff();
 </script>
+
 </body>
 </html>
